@@ -16,3 +16,6 @@
 [submodule "Plugins/OusterPlugin"]
 	path = Plugins/OusterPlugin
 	url = https://gitlab.kitware.com/LidarView/ousterplugin.git
+[submodule "Plugins/SeyondPlugin"]
+	path = Plugins/SeyondPlugin
+	url = git@github.com:guyuechaocc/SeyondPlugin.git
