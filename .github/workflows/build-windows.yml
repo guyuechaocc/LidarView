@@ -18,11 +18,25 @@ jobs:
           ${{ secrets.DEPLOY_KEY_SEYOND }}
           ${{ secrets.DEPLOY_KEY_LITE_SDK }}
 
+    - name: Add github.com to known_hosts
+      run: |
+        $sshDir = "$env:USERPROFILE\.ssh"
+        New-Item -ItemType Directory -Force -Path $sshDir | Out-Null
+        $key = ssh-keyscan -t ed25519 github.com 2>$null
+        Add-Content -Path "$sshDir\known_hosts" -Value $key
+      shell: pwsh
+
     - name: Checkout LidarView
       uses: actions/checkout@v4
       with:
-        submodules: recursive
         fetch-depth: 0
+
+    - name: Fetch submodules via SSH
+      run: |
+        git config --global --unset-all url.https://github.com/.insteadOf
+        git submodule sync --recursive
+        git submodule update --init --recursive
+      shell: pwsh
 
     - name: Setup Python
       uses: actions/setup-python@v5
