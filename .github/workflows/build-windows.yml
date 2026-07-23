@@ -41,8 +41,9 @@ jobs:
         git submodule update Plugins/SeyondPlugin
 
         $env:GIT_SSH_COMMAND = "`"$gitSsh`" -i $unixSshDir/deploy_key_lite_sdk -o StrictHostKeyChecking=no"
-        git submodule init Plugins/SeyondPlugin/SeyondSDK/vtkseyondsdk/seyond-lite-sdk
-        git submodule update Plugins/SeyondPlugin/SeyondSDK/vtkseyondsdk/seyond-lite-sdk
+        Push-Location Plugins/SeyondPlugin
+        git submodule update --init --recursive
+        Pop-Location
       shell: pwsh
 
     - name: Setup Python
