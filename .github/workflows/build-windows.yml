@@ -54,7 +54,7 @@ jobs:
     - name: Install Qt6 6.9.2
       run: |
         pip install aqtinstall
-        aqt install-qt windows desktop 6.9.2 win64_msvc2022_64 -m qt5compat qtmultimedia --outputdir $env:TEMP\Qt
+        aqt install-qt windows desktop 6.9.2 win64_msvc2022_64 -m qt5compat qtmultimedia --outputdir $env:RUNNER_TEMP\Qt
       shell: pwsh
 
     - name: Install WiX 3.14
@@ -86,6 +86,12 @@ jobs:
       run: |
         $boostCmake = "..\lidarview-superbuild\pvsb\superbuild\projects\win32\boost.cmake"
         (Get-Content $boostCmake) -replace '1949', '1999' | Set-Content $boostCmake
+        $versionMacros = "..\lidarview-superbuild\pvsb\superbuild\cmake\SuperbuildVersionMacros.cmake"
+        $content = Get-Content $versionMacros -Raw
+        $old = '  _superbuild_parse_version(parsed ${output})'
+        $new = "  if (NOT output)`n    set(output `"`${default}`")`n  endif ()`n  _superbuild_parse_version(parsed `"`${output}`")"
+        $content = $content.Replace($old, $new)
+        $content | Set-Content $versionMacros
       shell: pwsh
 
     - name: Configure
@@ -97,7 +103,6 @@ jobs:
           -DUSE_SYSTEM_qt6=ON `
           -Dlidarview_SOURCE_SELECTION=source `
           -Dlidarview_SOURCE_DIR=$env:GITHUB_WORKSPACE `
-          -DLIDARVIEW_VERSION_DEFAULT=5.3.0 `
           -DLIDARVIEW_BUILD_ALL_MODULES=OFF `
           -DBUILD_TESTING=OFF `
           -DENABLE_lidarview=ON `
