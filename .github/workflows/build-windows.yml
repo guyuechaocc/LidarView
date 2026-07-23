@@ -84,7 +84,7 @@ jobs:
 
     - name: Patch superbuild
       run: |
-        $boostCmake = "D:\build\..\lidarview-superbuild\pvsb\superbuild\projects\win32\boost.cmake"
+        $boostCmake = "..\lidarview-superbuild\pvsb\superbuild\projects\win32\boost.cmake"
         (Get-Content $boostCmake) -replace '1949', '1999' | Set-Content $boostCmake
       shell: pwsh
 
