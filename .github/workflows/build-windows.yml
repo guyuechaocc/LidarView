@@ -51,10 +51,10 @@ jobs:
       with:
         python-version: "3.12"
 
-    - name: Install Qt6 6.9.0
+    - name: Install Qt6 6.9.2
       run: |
         pip install aqtinstall
-        aqt install-qt windows desktop 6.9.0 win64_msvc_2022_64 -m qt5compat qtmultimedia --outputdir $env:TEMP\Qt
+        aqt install-qt windows desktop 6.9.2 win64_msvc2022_64 -m qt5compat qtmultimedia --outputdir $env:TEMP\Qt
       shell: pwsh
 
     - name: Install WiX 3.14
@@ -82,7 +82,7 @@ jobs:
 
     - name: Configure
       env:
-        Qt6_DIR: ${{ runner.temp }}\Qt\6.9.0\msvc_2022_64\lib\cmake\Qt6
+        Qt6_DIR: ${{ runner.temp }}\Qt\6.9.2\msvc2022_64\lib\cmake\Qt6
       run: |
         cmake -S ..\lidarview-superbuild -B D:\build -GNinja `
           -DCMAKE_BUILD_TYPE=Release `
