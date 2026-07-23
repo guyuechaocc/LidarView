@@ -11,31 +11,36 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - name: Setup SSH agent
-      uses: webfactory/ssh-agent@v0.9.1
-      with:
-        ssh-private-key: |
-          ${{ secrets.DEPLOY_KEY_SEYOND }}
-          ${{ secrets.DEPLOY_KEY_LITE_SDK }}
-
-    - name: Add github.com to known_hosts
-      run: |
-        $sshDir = "$env:USERPROFILE\.ssh"
-        New-Item -ItemType Directory -Force -Path $sshDir | Out-Null
-        $key = ssh-keyscan -t ed25519 github.com 2>$null
-        Add-Content -Path "$sshDir\known_hosts" -Value $key
-      shell: pwsh
-
     - name: Checkout LidarView
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    - name: Fetch submodules via SSH
+    - name: Setup SSH and fetch submodules
+      env:
+        KEY_SEYOND: ${{ secrets.DEPLOY_KEY_SEYOND }}
+        KEY_LITE_SDK: ${{ secrets.DEPLOY_KEY_LITE_SDK }}
       run: |
+        $sshDir = "$env:USERPROFILE\.ssh"
+        New-Item -ItemType Directory -Force -Path $sshDir | Out-Null
+
+        $env:KEY_SEYOND | Set-Content "$sshDir\deploy_key_seyond" -NoNewline
+        $env:KEY_LITE_SDK | Set-Content "$sshDir\deploy_key_lite_sdk" -NoNewline
+
+        icacls "$sshDir\deploy_key_seyond" /inheritance:r /grant:r "${env:USERNAME}:(R)"
+        icacls "$sshDir\deploy_key_lite_sdk" /inheritance:r /grant:r "${env:USERNAME}:(R)"
+
         git config --global --unset-all url.https://github.com/.insteadOf
-        git submodule sync --recursive
-        git submodule update --init --recursive
+        git submodule init Plugins/VelodynePlugin Plugins/HesaiPlugin Plugins/LivoxPlugin Plugins/LeishenPlugin Plugins/RobosensePlugin Plugins/OusterPlugin
+        git submodule update --recursive Plugins/VelodynePlugin Plugins/HesaiPlugin Plugins/LivoxPlugin Plugins/LeishenPlugin Plugins/RobosensePlugin Plugins/OusterPlugin
+
+        $env:GIT_SSH_COMMAND = "ssh -i $sshDir\deploy_key_seyond -o StrictHostKeyChecking=no"
+        git submodule init Plugins/SeyondPlugin
+        git submodule update Plugins/SeyondPlugin
+
+        $env:GIT_SSH_COMMAND = "ssh -i $sshDir\deploy_key_lite_sdk -o StrictHostKeyChecking=no"
+        git submodule init Plugins/SeyondPlugin/SeyondSDK/vtkseyondsdk/seyond-lite-sdk
+        git submodule update Plugins/SeyondPlugin/SeyondSDK/vtkseyondsdk/seyond-lite-sdk
       shell: pwsh
 
     - name: Setup Python
