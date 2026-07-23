@@ -34,11 +34,12 @@ jobs:
         git submodule init Plugins/VelodynePlugin Plugins/HesaiPlugin Plugins/LivoxPlugin Plugins/LeishenPlugin Plugins/RobosensePlugin Plugins/OusterPlugin
         git submodule update --recursive Plugins/VelodynePlugin Plugins/HesaiPlugin Plugins/LivoxPlugin Plugins/LeishenPlugin Plugins/RobosensePlugin Plugins/OusterPlugin
 
-        $env:GIT_SSH_COMMAND = "ssh -i $sshDir\deploy_key_seyond -o StrictHostKeyChecking=no"
+        $unixSshDir = $sshDir -replace '\\', '/'
+        $env:GIT_SSH_COMMAND = "ssh -i $unixSshDir/deploy_key_seyond -o StrictHostKeyChecking=no"
         git submodule init Plugins/SeyondPlugin
         git submodule update Plugins/SeyondPlugin
 
-        $env:GIT_SSH_COMMAND = "ssh -i $sshDir\deploy_key_lite_sdk -o StrictHostKeyChecking=no"
+        $env:GIT_SSH_COMMAND = "ssh -i $unixSshDir/deploy_key_lite_sdk -o StrictHostKeyChecking=no"
         git submodule init Plugins/SeyondPlugin/SeyondSDK/vtkseyondsdk/seyond-lite-sdk
         git submodule update Plugins/SeyondPlugin/SeyondSDK/vtkseyondsdk/seyond-lite-sdk
       shell: pwsh
