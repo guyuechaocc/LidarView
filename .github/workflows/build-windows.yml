@@ -1,0 +1,116 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [feature/windows-build]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+    - name: Setup SSH agent
+      uses: webfactory/ssh-agent@v0.9.1
+      with:
+        ssh-private-key: |
+          ${{ secrets.DEPLOY_KEY_SEYOND }}
+          ${{ secrets.DEPLOY_KEY_LITE_SDK }}
+
+    - name: Checkout LidarView
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install Qt6 6.9.0
+      run: |
+        pip install aqtinstall
+        aqt install-qt windows desktop 6.9.0 win64_msvc_2022_64 -m qt5compat qtmultimedia --outputdir $env:TEMP\Qt
+      shell: pwsh
+
+    - name: Install WiX 3.14
+      run: |
+        $ProgressPreference = "SilentlyContinue"
+        Invoke-WebRequest -Uri "https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip" -OutFile "$env:TEMP\wix314.zip"
+        Expand-Archive "$env:TEMP\wix314.zip" -DestinationPath "$env:GITHUB_WORKSPACE\.github\wix"
+        echo "WIX=$env:GITHUB_WORKSPACE\.github\wix" >> $env:GITHUB_ENV
+      shell: pwsh
+
+    - name: Setup CMake
+      uses: lukka/get-cmake@latest
+
+    - name: Install Ninja
+      run: choco install ninja -y
+
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Clone superbuild
+      working-directory: ..
+      run: |
+        git clone --depth=1 https://gitlab.kitware.com/LidarView/lidarview-superbuild.git
+      shell: pwsh
+
+    - name: Configure
+      env:
+        Qt6_DIR: ${{ runner.temp }}\Qt\6.9.0\msvc_2022_64\lib\cmake\Qt6
+      run: |
+        cmake -S ..\lidarview-superbuild -B D:\build -GNinja `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DUSE_SYSTEM_qt6=ON `
+          -Dlidarview_SOURCE_SELECTION=source `
+          -Dlidarview_SOURCE_DIR=$env:GITHUB_WORKSPACE `
+          -DLIDARVIEW_BUILD_ALL_MODULES=OFF `
+          -DBUILD_TESTING=OFF `
+          -DENABLE_lidarview=ON `
+          -DENABLE_hesaisdk=ON `
+          -DENABLE_velodynesdk=ON `
+          -DENABLE_opencv=ON `
+          -DENABLE_numpy=ON `
+          -DENABLE_scipy=ON `
+          -DENABLE_pythonpygments=ON `
+          -DENABLE_openmp=ON `
+          -DENABLE_tbb=ON `
+          -Dslam_SOURCE_SELECTION=OFF `
+          -DENABLE_slam=OFF `
+          -DENABLE_g2o=OFF `
+          -DENABLE_gtsam=OFF `
+          -DENABLE_pcl=OFF `
+          -DENABLE_pclplugin=OFF `
+          -DENABLE_ros2io=OFF `
+          -DENABLE_lz4=OFF `
+          -DENABLE_zstd=OFF `
+          -DENABLE_fastdds=OFF `
+          -DENABLE_teaserpp=OFF `
+          -DENABLE_ceres=OFF `
+          -DENABLE_nanoflann=OFF `
+          -DENABLE_pdal=OFF `
+          -DENABLE_xerces=OFF `
+          -DENABLE_paraviewweb=OFF `
+          -DSUPERBUILD_PROJECT_PARALLELISM=1 `
+          -DPARAVIEW_EXTRA_CMAKE_ARGUMENTS:STRING="-DVTK_ENABLE_BULK_INSTANTIATE=OFF"
+      shell: pwsh
+
+    - name: Build
+      run: cmake --build D:\build --parallel 2 --config Release
+      shell: pwsh
+
+    - name: Package
+      run: |
+        Set-Location D:\build
+        ctest -R cpack --output-on-failure --timeout 6400
+      shell: pwsh
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: LidarView-Windows
+        path: D:\build\LidarView-*.zip
+        retention-days: 30
