@@ -88,16 +88,15 @@ jobs:
         (Get-Content $boostCmake) -replace '1949', '1999' | Set-Content $boostCmake
         $versionMacros = "..\lidarview-superbuild\pvsb\superbuild\cmake\SuperbuildVersionMacros.cmake"
         $content = Get-Content $versionMacros -Raw
-        $patchText = @'
-          if (NOT output)
-            if (default)
-              set(output "${default}")
-            else ()
-              set(output "5.3.0")
-            endif ()
-          endif ()
-          _superbuild_parse_version(parsed "${output}")
-'@
+        $patchText = ""
+        $patchText += "          if (NOT output)`n"
+        $patchText += "            if (default)`n"
+        $patchText += '              set(output "${default}")' + "`n"
+        $patchText += "            else ()`n"
+        $patchText += '              set(output "5.3.0")' + "`n"
+        $patchText += "            endif ()`n"
+        $patchText += "          endif ()`n"
+        $patchText += '          _superbuild_parse_version(parsed "${output}")'
         $content = $content -replace '  _superbuild_parse_version\(parsed \$\{output\}\)', $patchText
         $content | Set-Content $versionMacros
       shell: pwsh
