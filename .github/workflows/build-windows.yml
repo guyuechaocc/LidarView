@@ -82,6 +82,12 @@ jobs:
         git submodule update --init --recursive
       shell: pwsh
 
+    - name: Patch superbuild
+      run: |
+        $boostCmake = "D:\build\..\lidarview-superbuild\pvsb\superbuild\projects\win32\boost.cmake"
+        (Get-Content $boostCmake) -replace '1949', '1999' | Set-Content $boostCmake
+      shell: pwsh
+
     - name: Configure
       env:
         Qt6_DIR: ${{ runner.temp }}\Qt\6.9.2\msvc2022_64\lib\cmake\Qt6
@@ -91,6 +97,7 @@ jobs:
           -DUSE_SYSTEM_qt6=ON `
           -Dlidarview_SOURCE_SELECTION=source `
           -Dlidarview_SOURCE_DIR=$env:GITHUB_WORKSPACE `
+          -DLIDARVIEW_VERSION_DEFAULT=5.3.0 `
           -DLIDARVIEW_BUILD_ALL_MODULES=OFF `
           -DBUILD_TESTING=OFF `
           -DENABLE_lidarview=ON `
