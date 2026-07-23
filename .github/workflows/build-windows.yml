@@ -78,6 +78,8 @@ jobs:
       working-directory: ..
       run: |
         git clone --depth=1 https://gitlab.kitware.com/LidarView/lidarview-superbuild.git
+        cd lidarview-superbuild
+        git submodule update --init --recursive
       shell: pwsh
 
     - name: Configure
