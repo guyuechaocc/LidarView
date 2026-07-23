@@ -40,6 +40,7 @@ set(lidarview_default_plugins
   LivoxPlugin
   RobosensePlugin
   HesaiPlugin
+  SeyondPlugin
 )
 
 if (LIDARVIEW_USE_CURL)
