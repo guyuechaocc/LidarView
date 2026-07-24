@@ -111,6 +111,12 @@ jobs:
         $content | Set-Content $versionMacros
       shell: pwsh
 
+    - name: Clean MinGW from PATH
+      run: |
+        $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -notmatch 'mingw|C:\\msys64' }) -join ';'
+        echo "PATH=$env:PATH" >> $env:GITHUB_ENV
+      shell: pwsh
+
     - name: Configure
       env:
         Qt6_DIR: ${{ runner.temp }}\Qt\6.9.2\msvc2022_64\lib\cmake\Qt6
