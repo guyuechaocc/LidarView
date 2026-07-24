@@ -99,7 +99,10 @@ jobs:
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\boost.common.cmake', 'r', encoding='utf-8') as f:
             content = f.read()
         content = re.sub(r'bootstrap\.bat\s+\$\{boost_bootstrap_toolset\}', 'bootstrap.bat msvc', content)
-        content = content.replace('link=shared\n  runtime-link=shared\n  threading=multi', 'link=shared\n  runtime-link=shared\n  threading=multi\n  variant=release')
+        # Add variant=release after the initial set of boost_options
+        content = content.replace(\
+            'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>)',
+            'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>\n  variant=release)')
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\boost.common.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
 
