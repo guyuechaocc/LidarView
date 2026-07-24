@@ -74,6 +74,16 @@ jobs:
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
 
+    - name: Install system Boost
+      run: vcpkg install boost:x64-windows
+      shell: pwsh
+
+    - name: Set Boost environment
+      run: |
+        echo "BOOST_ROOT=C:/vcpkg/installed/x64-windows" >> $env:GITHUB_ENV
+        echo "Boost_DIR=C:/vcpkg/installed/x64-windows/share/boost" >> $env:GITHUB_ENV
+      shell: pwsh
+
     - name: Clone superbuild
       working-directory: ..
       run: |
@@ -109,6 +119,7 @@ jobs:
         cmake -S ..\lidarview-superbuild -B D:\build -GNinja `
           -DCMAKE_BUILD_TYPE=Release `
           -DUSE_SYSTEM_qt6=ON `
+          -DUSE_SYSTEM_boost=ON `
           -Dlidarview_SOURCE_SELECTION=source `
           -Dlidarview_SOURCE_DIR="$workspace" `
           -DLIDARVIEW_BUILD_ALL_MODULES=OFF `
