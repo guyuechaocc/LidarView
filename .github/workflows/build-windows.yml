@@ -89,6 +89,10 @@ jobs:
         $boostContent = $boostContent -replace '1949', '1999'
         $boostContent = $boostContent -replace 'include\(boost\.common\)', "set(boost_toolset_option `"msvc`")`ninclude(boost.common)"
         $boostContent | Set-Content $boostCmake
+        $boostCommon = "..\lidarview-superbuild\pvsb\superbuild\projects\boost.common.cmake"
+        $commonContent = Get-Content $boostCommon -Raw
+        $commonContent = $commonContent -replace '"--with-\$\{boost_toolset_option\}"', '"${boost_toolset_option}"'
+        $commonContent | Set-Content $boostCommon
         $versionMacros = "..\lidarview-superbuild\pvsb\superbuild\cmake\SuperbuildVersionMacros.cmake"
         $content = Get-Content $versionMacros -Raw
         $patchText = ""
