@@ -84,33 +84,50 @@ jobs:
 
     - name: Patch superbuild
       run: |
-        $boostCmake = "..\lidarview-superbuild\pvsb\superbuild\projects\win32\boost.cmake"
-        $boostContent = Get-Content $boostCmake -Raw
-        $boostContent = $boostContent -replace '1949', '1999'
-        $boostContent = $boostContent -replace 'include\(boost\.common\)', "set(boost_toolset_option `"msvc`")`ninclude(boost.common)"
-        Set-Content $boostCmake -Value $boostContent -NoNewline
-        $boostCommon = "..\lidarview-superbuild\pvsb\superbuild\projects\boost.common.cmake"
-        $commonContent = Get-Content $boostCommon -Raw
-        $commonContent = $commonContent -replace 'bootstrap\.bat\s+\$\{boost_bootstrap_toolset\}', 'bootstrap.bat msvc'
-        Set-Content $boostCommon -Value $commonContent -NoNewline
-        $pcapCmake = "..\lidarview-superbuild\projects\win32\pcap.cmake"
-        $pcapContent = Get-Content $pcapCmake -Raw
-        $pcapContent = $pcapContent -replace 'CMAKE_ARGS', "CMAKE_ARGS`n    -DENABLE_REMOTE:BOOL=OFF`n    -DUSE_OPENSSL:BOOL=OFF"
-        Set-Content $pcapCmake -Value $pcapContent -NoNewline
-        $versionMacros = "..\lidarview-superbuild\pvsb\superbuild\cmake\SuperbuildVersionMacros.cmake"
-        $content = Get-Content $versionMacros -Raw
-        $patchText = ""
-        $patchText += "          if (NOT output)`n"
-        $patchText += "            if (default)`n"
-        $patchText += '              set(output "${default}")' + "`n"
-        $patchText += "            else ()`n"
-        $patchText += '              set(output "5.3.0")' + "`n"
-        $patchText += "            endif ()`n"
-        $patchText += "          endif ()`n"
-        $patchText += '          _superbuild_parse_version(parsed "${output}")'
-        $content = $content -replace '  _superbuild_parse_version\(parsed \$\{output\}\)', $patchText
-        Set-Content $versionMacros -Value $content -NoNewline
-      shell: pwsh
+        python3 - <<'PYEOF'
+        import re
+
+        # 1. Patch boost.cmake - MSVC 1949->1999 and add toolset
+        with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\win32\\boost.cmake', 'r', encoding='utf-8') as f:
+            content = f.read()
+        content = content.replace('1949', '1999')
+        content = content.replace('include(boost.common)', 'set(boost_toolset_option "msvc")\ninclude(boost.common)')
+        with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\win32\\boost.cmake', 'w', encoding='utf-8', newline='') as f:
+            f.write(content)
+
+        # 2. Patch boost.common.cmake - hardcode bootstrap.bat msvc
+        with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\boost.common.cmake', 'r', encoding='utf-8') as f:
+            content = f.read()
+        content = re.sub(r'bootstrap\.bat\s+\$\{boost_bootstrap_toolset\}', 'bootstrap.bat msvc', content)
+        with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\boost.common.cmake', 'w', encoding='utf-8', newline='') as f:
+            f.write(content)
+
+        # 3. Patch pcap.cmake - disable Remote and OpenSSL
+        with open('..\\lidarview-superbuild\\projects\\win32\\pcap.cmake', 'r', encoding='utf-8') as f:
+            content = f.read()
+        content = content.replace('CMAKE_ARGS', 'CMAKE_ARGS\n    -DENABLE_REMOTE:BOOL=OFF\n    -DUSE_OPENSSL:BOOL=OFF', 1)
+        with open('..\\lidarview-superbuild\\projects\\win32\\pcap.cmake', 'w', encoding='utf-8', newline='') as f:
+            f.write(content)
+
+        # 4. Patch SuperbuildVersionMacros.cmake - fallback version
+        with open('..\\lidarview-superbuild\\pvsb\\superbuild\\cmake\\SuperbuildVersionMacros.cmake', 'r', encoding='utf-8') as f:
+            content = f.read()
+        old_line = '  _superbuild_parse_version(parsed ${output})'
+        new_block = '''          if (NOT output)
+            if (default)
+              set(output "${default}")
+            else ()
+              set(output "5.3.0")
+            endif ()
+          endif ()
+          _superbuild_parse_version(parsed "${output}")'''
+        content = content.replace(old_line, new_block)
+        with open('..\\lidarview-superbuild\\pvsb\\superbuild\\cmake\\SuperbuildVersionMacros.cmake', 'w', encoding='utf-8', newline='') as f:
+            f.write(content)
+
+        print("All patches applied successfully")
+        PYEOF
+      shell: bash
 
     - name: Clean MinGW and Strawberry from PATH
       run: |
