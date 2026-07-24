@@ -88,11 +88,15 @@ jobs:
         $boostContent = Get-Content $boostCmake -Raw
         $boostContent = $boostContent -replace '1949', '1999'
         $boostContent = $boostContent -replace 'include\(boost\.common\)', "set(boost_toolset_option `"msvc`")`ninclude(boost.common)"
-        $boostContent | Set-Content $boostCmake
+        Set-Content $boostCmake -Value $boostContent -NoNewline
         $boostCommon = "..\lidarview-superbuild\pvsb\superbuild\projects\boost.common.cmake"
         $commonContent = Get-Content $boostCommon -Raw
-        $commonContent = $commonContent -replace '"--with-\$\{boost_toolset_option\}"', '"${boost_toolset_option}"'
-        $commonContent | Set-Content $boostCommon
+        $commonContent = $commonContent -replace 'bootstrap\.bat\s+\$\{boost_bootstrap_toolset\}', 'bootstrap.bat msvc'
+        Set-Content $boostCommon -Value $commonContent -NoNewline
+        $pcapCmake = "..\lidarview-superbuild\projects\win32\pcap.cmake"
+        $pcapContent = Get-Content $pcapCmake -Raw
+        $pcapContent = $pcapContent -replace 'CMAKE_ARGS', "CMAKE_ARGS`n    -DENABLE_REMOTE:BOOL=OFF`n    -DUSE_OPENSSL:BOOL=OFF"
+        Set-Content $pcapCmake -Value $pcapContent -NoNewline
         $versionMacros = "..\lidarview-superbuild\pvsb\superbuild\cmake\SuperbuildVersionMacros.cmake"
         $content = Get-Content $versionMacros -Raw
         $patchText = ""
@@ -105,7 +109,7 @@ jobs:
         $patchText += "          endif ()`n"
         $patchText += '          _superbuild_parse_version(parsed "${output}")'
         $content = $content -replace '  _superbuild_parse_version\(parsed \$\{output\}\)', $patchText
-        $content | Set-Content $versionMacros
+        Set-Content $versionMacros -Value $content -NoNewline
       shell: pwsh
 
     - name: Clean MinGW and Strawberry from PATH
