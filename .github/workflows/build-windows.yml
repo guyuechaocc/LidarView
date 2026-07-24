@@ -74,9 +74,6 @@ jobs:
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
 
-
-      shell: pwsh
-
     - name: Clone superbuild
       working-directory: ..
       run: |
