@@ -95,10 +95,11 @@ jobs:
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\win32\\boost.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
 
-        # 2. Patch boost.common.cmake - hardcode bootstrap.bat msvc
+        # 2. Patch boost.common.cmake - hardcode bootstrap.bat msvc and add variant=release
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\boost.common.cmake', 'r', encoding='utf-8') as f:
             content = f.read()
         content = re.sub(r'bootstrap\.bat\s+\$\{boost_bootstrap_toolset\}', 'bootstrap.bat msvc', content)
+        content = content.replace('link=shared\n  runtime-link=shared\n  threading=multi', 'link=shared\n  runtime-link=shared\n  threading=multi\n  variant=release')
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\boost.common.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
 
