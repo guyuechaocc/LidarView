@@ -85,7 +85,10 @@ jobs:
     - name: Patch superbuild
       run: |
         $boostCmake = "..\lidarview-superbuild\pvsb\superbuild\projects\win32\boost.cmake"
-        (Get-Content $boostCmake) -replace '1949', '1999' | Set-Content $boostCmake
+        $boostContent = Get-Content $boostCmake -Raw
+        $boostContent = $boostContent -replace '1949', '1999'
+        $boostContent = $boostContent -replace 'include\(boost\.common\)', "set(boost_toolset_option `"msvc`")`ninclude(boost.common)"
+        $boostContent | Set-Content $boostCmake
         $versionMacros = "..\lidarview-superbuild\pvsb\superbuild\cmake\SuperbuildVersionMacros.cmake"
         $content = Get-Content $versionMacros -Raw
         $patchText = ""
