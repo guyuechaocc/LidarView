@@ -103,6 +103,12 @@ jobs:
         content = content.replace(\
             'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>)',
             'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>\n  variant=release)')
+        # Wrap b2 build command with vcvarsall to ensure MSVC env is set
+        old_build = '''    BUILD_COMMAND
+      <SOURCE_DIR>/b2'''
+        new_build = '''    BUILD_COMMAND
+      cmd.exe /C ^"call ^"C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Auxiliary/Build/vcvarsall.bat^" x64 ^&^& <SOURCE_DIR>\\\\b2.exe^"'''
+        content = content.replace(old_build, new_build, 1)
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\boost.common.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
 
