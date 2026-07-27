@@ -28,6 +28,9 @@
 #include <vtkIntArray.h>
 #include <vtkPointData.h>
 
+// STD
+#include <iostream>
+
 //----------------------------------------------------------------------------
 bool CvImageToVtkImage(const cv::Mat& inImg, vtkSmartPointer<vtkImageData> outImg)
 {
