@@ -87,13 +87,13 @@ jobs:
         python3 - <<'PYEOF'
         import re
 
-        # 1. Patch boost.cmake - revert to msvc 14.3 (safer) and add explicit compiler
-        # First revert the msvc 14.4 mapping back to 14.3
+        # 1. Patch boost.cmake - make MSVC 19.51 recognized (map to 14.3)
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\win32\\boost.cmake', 'r', encoding='utf-8') as f:
             content = f.read()
-        # Remove the 14.4 mapping (if present from previous patch)
+        # The upstream file has: elseif (NOT MSVC_VERSION VERSION_GREATER 1949) / set(msvc_ver 14.3) / else () / message(FATAL_ERROR...
+        # We change the 1949 threshold to 1999 so MSVC 19.51 falls into the 14.3 bucket
         content = content.replace(
-            "elseif (NOT MSVC_VERSION VERSION_GREATER 1949)\n  set(msvc_ver 14.3)\nelseif (NOT MSVC_VERSION VERSION_GREATER 1999)\n  set(msvc_ver 14.4)\nelse ()\n  message(FATAL_ERROR",
+            "elseif (NOT MSVC_VERSION VERSION_GREATER 1949)\n  set(msvc_ver 14.3)\nelse ()\n  message(FATAL_ERROR",
             "elseif (NOT MSVC_VERSION VERSION_GREATER 1999)\n  set(msvc_ver 14.3)\nelse ()\n  message(FATAL_ERROR"
         )
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\win32\\boost.cmake', 'w', encoding='utf-8', newline='') as f:
