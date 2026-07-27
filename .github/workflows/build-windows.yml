@@ -160,6 +160,7 @@ jobs:
         cmake -S ..\lidarview-superbuild -B D:\build -GNinja `
           -DCMAKE_BUILD_TYPE=Release `
           -DCMAKE_Fortran_COMPILER=OFF `
+          -DCMAKE_POLICY_VERSION_MINIMUM=3.5 `
           -DUSE_SYSTEM_qt6=ON `
           -DUSE_SYSTEM_boost=OFF `
           -Dlidarview_SOURCE_SELECTION=source `
