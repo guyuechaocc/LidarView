@@ -100,17 +100,29 @@ jobs:
             content = f.read()
         content = re.sub(r'bootstrap\.bat\s+\$\{boost_bootstrap_toolset\}', 'bootstrap.bat msvc', content)
         # Add variant=release after the initial set of boost_options
-        content = content.replace(\
+        content = content.replace(
             'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>)',
             'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>\n  variant=release)')
-        # Wrap b2 build command with vcvarsall to ensure MSVC env is set
-        old_build = '''    BUILD_COMMAND
-      <SOURCE_DIR>/b2'''
-        new_build = '''    BUILD_COMMAND
-      cmd.exe /C ^"call ^"C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Auxiliary/Build/vcvarsall.bat^" x64 ^&^& <SOURCE_DIR>\\\\b2.exe^"'''
-        content = content.replace(old_build, new_build, 1)
+        # Wrap BUILD_COMMAND with our vcvarsall wrapper script
+        content = content.replace(
+            '    BUILD_COMMAND\n      <SOURCE_DIR>/b2\n        ${boost_options}',
+            '    BUILD_COMMAND\n      D:/build/boost_build.bat <SOURCE_DIR>/b2 ${boost_options}')
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\boost.common.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
+
+        # Create the boost build wrapper script
+        # This script ensures MSVC env vars are set before running b2
+        wrapper_path = 'D:/build/boost_build.bat'
+        import os
+        os.makedirs('D:/build', exist_ok=True)
+        wrapper_content = (
+            '@echo off\r\n'
+            'call "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Auxiliary\\Build\\vcvarsall.bat" x64\r\n'
+            '%*\r\n'
+        )
+        with open(wrapper_path, 'w', encoding='utf-8', newline='') as f:
+            f.write(wrapper_content)
+        print(f"Created wrapper at {wrapper_path}")
 
         # 3. Patch pcap.cmake - disable Remote and OpenSSL
         with open('..\\lidarview-superbuild\\projects\\win32\\pcap.cmake', 'r', encoding='utf-8') as f:
