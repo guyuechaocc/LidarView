@@ -101,9 +101,9 @@ jobs:
 
         # 2. Create user-config.jam with explicit compiler path for VS 2026
         import os
-        os.makedirs('D:/build', exist_ok=True)
+        os.makedirs('D:/boost_config', exist_ok=True)
         user_config_content = 'using msvc : 14.3 : cl.exe : <setup>"C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Auxiliary/Build/vcvarsall.bat" ;'
-        with open('D:/build/user-config.jam', 'w', encoding='utf-8', newline='') as f:
+        with open('D:/boost_config/user-config.jam', 'w', encoding='utf-8', newline='') as f:
             f.write(user_config_content)
         print("Created user-config.jam with explicit MSVC setup")
 
@@ -114,7 +114,7 @@ jobs:
         # Add variant=release and user-config after the initial set of boost_options
         content = content.replace(
             'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>)',
-            'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>\n  variant=release\n  user-config=D:/build/user-config.jam)')
+            'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>\n  variant=release\n  user-config=D:/boost_config/user-config.jam)')
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\boost.common.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
 
