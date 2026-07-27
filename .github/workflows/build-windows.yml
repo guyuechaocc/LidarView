@@ -126,24 +126,18 @@ jobs:
         with open('../lidarview-superbuild/projects/win32/pcap.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
 
-        # 5. Inject superbuild_add_extra_cmake_args to propagate CMAKE_POLICY_VERSION_MINIMUM to all projects
-        sb_cmakelists = '../lidarview-superbuild/pvsb/superbuild/CMakeLists.txt'
-        with open(sb_cmakelists, 'r', encoding='utf-8') as f:
+        # 4b. Patch tins.cmake - pass cmake_policy_version_minimum
+        with open('../lidarview-superbuild/projects/tins.cmake', 'r', encoding='utf-8') as f:
             content = f.read()
-        inject_call = 'superbuild_add_extra_cmake_args(-DCMAKE_POLICY_VERSION_MINIMUM=3.5)'
-        if inject_call not in content:
-            # Inject after include(SuperbuildMacros)
-            content = content.replace(
-                'include(SuperbuildMacros)\n',
-                'include(SuperbuildMacros)\n' + inject_call + '\n'
-            )
-            with open(sb_cmakelists, 'w', encoding='utf-8', newline='') as f:
-                f.write(content)
-            print("Injected superbuild_add_extra_cmake_args")
-        else:
-            print("superbuild_add_extra_cmake_args already present")
+        content = content.replace(
+            'CMAKE_ARGS\n',
+            'CMAKE_ARGS\n    -DCMAKE_POLICY_VERSION_MINIMUM:STRING=3.5\n',
+            1
+        )
+        with open('../lidarview-superbuild/projects/tins.cmake', 'w', encoding='utf-8', newline='') as f:
+            f.write(content)
 
-        # 6. Patch SuperbuildVersionMacros.cmake - fallback version
+        # 5. Patch SuperbuildVersionMacros.cmake - fallback version
         with open('../lidarview-superbuild/pvsb/superbuild/cmake/SuperbuildVersionMacros.cmake', 'r', encoding='utf-8') as f:
             content = f.read()
         old_line = '  _superbuild_parse_version(parsed ${output})'
