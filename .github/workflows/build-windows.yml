@@ -87,10 +87,15 @@ jobs:
         python3 - <<'PYEOF'
         import re
 
-        # 1. Patch boost.cmake - MSVC 1949->1999 and add toolset
+        # 1. Patch boost.cmake - update MSVC version mapping
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\win32\\boost.cmake', 'r', encoding='utf-8') as f:
             content = f.read()
-        content = content.replace('1949', '1999')
+        # Add mapping for msvc 14.4 (VS 2022 17.10+)
+        content = content.replace(
+            "elseif (NOT MSVC_VERSION VERSION_GREATER 1949)\n  set(msvc_ver 14.3)\nelse ()\n  message(FATAL_ERROR",
+            "elseif (NOT MSVC_VERSION VERSION_GREATER 1949)\n  set(msvc_ver 14.3)\nelseif (NOT MSVC_VERSION VERSION_GREATER 1999)\n  set(msvc_ver 14.4)\nelse ()\n  message(FATAL_ERROR"
+        )
+        # Add toolset option
         content = content.replace('include(boost.common)', 'set(boost_toolset_option "msvc")\ninclude(boost.common)')
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\win32\\boost.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
@@ -103,26 +108,10 @@ jobs:
         content = content.replace(
             'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>)',
             'list(APPEND boost_options\n  --prefix=<INSTALL_DIR>\n  variant=release)')
-        # Wrap BUILD_COMMAND with our vcvarsall wrapper script
-        content = content.replace(
-            '    BUILD_COMMAND\n      <SOURCE_DIR>/b2\n        ${boost_options}',
-            '    BUILD_COMMAND\n      D:/build/boost_build.bat <SOURCE_DIR>/b2 ${boost_options}')
+        # Remove b2 wrapper approach (not needed now)
+        # Just leave the BUILD_COMMAND as is
         with open('..\\lidarview-superbuild\\pvsb\\superbuild\\projects\\boost.common.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
-
-        # Create the boost build wrapper script
-        # This script ensures MSVC env vars are set before running b2
-        wrapper_path = 'D:/build/boost_build.bat'
-        import os
-        os.makedirs('D:/build', exist_ok=True)
-        wrapper_content = (
-            '@echo off\r\n'
-            'call "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Auxiliary\\Build\\vcvarsall.bat" x64\r\n'
-            '%*\r\n'
-        )
-        with open(wrapper_path, 'w', encoding='utf-8', newline='') as f:
-            f.write(wrapper_content)
-        print(f"Created wrapper at {wrapper_path}")
 
         # 3. Patch pcap.cmake - disable Remote and OpenSSL
         with open('..\\lidarview-superbuild\\projects\\win32\\pcap.cmake', 'r', encoding='utf-8') as f:
