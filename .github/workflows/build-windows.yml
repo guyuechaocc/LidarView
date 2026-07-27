@@ -126,15 +126,17 @@ jobs:
         with open('../lidarview-superbuild/projects/win32/pcap.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
 
-        # 4b. Patch tins.cmake - pass cmake_policy_version_minimum
-        with open('../lidarview-superbuild/projects/tins.cmake', 'r', encoding='utf-8') as f:
+        # 4b. Globally inject CMAKE_POLICY_VERSION_MINIMUM in SuperbuildMacros.cmake
+        # This adds the flag to ALL ExternalProject_Add cmake args, fixing old cmake_minimum_required issues
+        with open('../lidarview-superbuild/pvsb/superbuild/cmake/SuperbuildMacros.cmake', 'r', encoding='utf-8') as f:
             content = f.read()
+        # Find the central CMAKE_ARGS block that's passed to all ExternalProject_Add calls
+        # Inject our flag right after -DCMAKE_EXPORT_NO_PACKAGE_REGISTRY:BOOL=ON
         content = content.replace(
-            'CMAKE_ARGS\n',
-            'CMAKE_ARGS\n    -DCMAKE_POLICY_VERSION_MINIMUM:STRING=3.5\n',
-            1
+            '-DCMAKE_EXPORT_NO_PACKAGE_REGISTRY:BOOL=ON\n',
+            '-DCMAKE_EXPORT_NO_PACKAGE_REGISTRY:BOOL=ON\n      -DCMAKE_POLICY_VERSION_MINIMUM:STRING=3.5\n'
         )
-        with open('../lidarview-superbuild/projects/tins.cmake', 'w', encoding='utf-8', newline='') as f:
+        with open('../lidarview-superbuild/pvsb/superbuild/cmake/SuperbuildMacros.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
 
         # 5. Patch SuperbuildVersionMacros.cmake - fallback version
