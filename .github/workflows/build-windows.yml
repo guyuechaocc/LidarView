@@ -126,29 +126,7 @@ jobs:
         with open('../lidarview-superbuild/projects/win32/pcap.cmake', 'w', encoding='utf-8', newline='') as f:
             f.write(content)
 
-        # 4b. Patch SeyondPlugin - add seyond-lite-sdk include path for MSVC
-        # The header driver_param.hpp includes "seyond/log/log.hpp" which is in seyond-lite-sdk/,
-        # but only vtkseyondsdk/ was in the include path.
-        seyon_interp = 'Plugins/SeyondPlugin/SeyondPacketInterpreters/CMakeLists.txt'
-        with open(seyon_interp, 'r', encoding='utf-8') as f:
-            content = f.read()
-        old_block = ('target_include_directories(SeyondPacketInterpreters PRIVATE\n'
-                     '  ${CMAKE_CURRENT_SOURCE_DIR}/../SeyondSDK/vtkseyondsdk\n'
-                     ')')
-        # Only patch if old block is exactly there (no seyond-lite-sdk yet)
-        if old_block in content:
-            new_block = ('target_include_directories(SeyondPacketInterpreters PRIVATE\n'
-                         '  ${CMAKE_CURRENT_SOURCE_DIR}/../SeyondSDK/vtkseyondsdk\n'
-                         '  ${CMAKE_CURRENT_SOURCE_DIR}/../SeyondSDK/vtkseyondsdk/seyond-lite-sdk\n'
-                         ')')
-            content = content.replace(old_block, new_block)
-            with open(seyon_interp, 'w', encoding='utf-8', newline='') as f:
-                f.write(content)
-            print("Patched SeyondPacketInterpreters/CMakeLists.txt with seyond-lite-sdk include")
-        else:
-            print("SeyondPacketInterpreters/CMakeLists.txt already patched or changed")
-
-        # 4c. Globally inject CMAKE_POLICY_VERSION_MINIMUM in SuperbuildMacros.cmake
+        # 4b. Globally inject CMAKE_POLICY_VERSION_MINIMUM in SuperbuildMacros.cmake
         # This adds the flag to ALL ExternalProject_Add cmake args, fixing old cmake_minimum_required issues
         with open('../lidarview-superbuild/pvsb/superbuild/cmake/SuperbuildMacros.cmake', 'r', encoding='utf-8') as f:
             content = f.read()
