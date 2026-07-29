@@ -179,7 +179,7 @@ jobs:
           -Dlidarview_SOURCE_SELECTION=source `
           -Dlidarview_SOURCE_DIR="$workspace" `
           -DLIDARVIEW_BUILD_ALL_MODULES=OFF `
-          -DBUILD_TESTING=OFF `
+          -DBUILD_TESTING=ON `
           -DENABLE_lidarview=ON `
           -DENABLE_hesaisdk=ON `
           -DENABLE_velodynesdk=ON `
